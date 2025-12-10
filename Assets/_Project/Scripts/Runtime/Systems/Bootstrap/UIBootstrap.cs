@@ -60,7 +60,7 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
                 }
                 else
                 {
-                    bool win = Random.value > 0.5f;
+                    bool win = TestTFT.Scripts.Runtime.Systems.Core.DeterministicRng.NextFloat01(TestTFT.Scripts.Runtime.Systems.Core.DeterministicRng.Stream.Loot) > 0.5f;
                     _economy.AddStreak(win);
                 }
                 _economy.AddGold(5); // base income
