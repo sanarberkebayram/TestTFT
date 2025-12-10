@@ -33,6 +33,12 @@ namespace TestTFT.Scripts.Runtime.Combat.Ability
 
             // Global timing
             CombatTime.EnsureStarted();
+            // Resolve crit
+            bool isCrit = TestTFT.Scripts.Runtime.Systems.Core.DeterministicRng.NextFloat01(TestTFT.Scripts.Runtime.Systems.Core.DeterministicRng.Stream.Targeting) < spell.critChance;
+            float outgoingMult = effects != null ? effects.GetOutgoingDamageMultiplier() : 1f;
+            float damage = Mathf.Max(0f, spell.baseDamage) * outgoingMult;
+            if (isCrit)
+                damage *= Mathf.Max(1f, spell.critMultiplier);
 
             bool isDodged = false;
             bool isCrit = false;

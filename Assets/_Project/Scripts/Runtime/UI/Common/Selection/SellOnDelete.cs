@@ -19,8 +19,9 @@ namespace TestTFT.Scripts.Runtime.UI.Common.Selection
             {
                 if (_economy != null) _economy.AddGold(SellGold);
                 Destroy(gameObject);
+                // Notify roster systems that a unit was removed
+                TestTFT.Scripts.Runtime.Systems.Traits.RosterEvents.Raise();
             }
         }
     }
 }
-

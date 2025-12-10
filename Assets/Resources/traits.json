@@ -1,0 +1,35 @@
+{
+  "traits": [
+    {
+      "id": "warrior",
+      "name": "Warrior",
+      "emblemAvailable": true,
+      "breakpoints": [
+        { "threshold": 2, "effects": [ { "stat": "attackDamage", "value": 10 } ] },
+        { "threshold": 4, "effects": [ { "stat": "attackDamage", "value": 25 } ] },
+        { "threshold": 6, "effects": [ { "stat": "attackDamage", "value": 50 } ] }
+      ]
+    },
+    {
+      "id": "ranger",
+      "name": "Ranger",
+      "emblemAvailable": true,
+      "breakpoints": [
+        { "threshold": 2, "effects": [ { "stat": "attackSpeed", "value": 10 } ] },
+        { "threshold": 4, "effects": [ { "stat": "attackSpeed", "value": 20 } ] },
+        { "threshold": 6, "effects": [ { "stat": "attackSpeed", "value": 35 } ] }
+      ]
+    },
+    {
+      "id": "mystic",
+      "name": "Mystic",
+      "emblemAvailable": true,
+      "breakpoints": [
+        { "threshold": 2, "effects": [ { "stat": "spellPower", "value": 10 } ] },
+        { "threshold": 4, "effects": [ { "stat": "spellPower", "value": 20 } ] },
+        { "threshold": 6, "effects": [ { "stat": "spellPower", "value": 35 } ] }
+      ]
+    }
+  ]
+}
+

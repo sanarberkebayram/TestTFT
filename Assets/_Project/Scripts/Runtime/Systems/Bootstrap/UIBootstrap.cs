@@ -13,6 +13,7 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
         private EconomySystem _economy;
         private ShopSystem _shop;
         private GameLoopSystem _loop;
+        private GameObject _benchRoot;
 
         private Canvas _canvas;
 
@@ -35,6 +36,7 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
             BuildHUD();
             BuildShop();
             BuildBench();
+            BuildTraitsUI();
             BuildTooltip();
             _loop.OnPhaseChanged += OnPhaseChanged;
             _loop.ForceShop(20f);
@@ -60,7 +62,7 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
                 }
                 else
                 {
-                    bool win = Random.value > 0.5f;
+                    bool win = TestTFT.Scripts.Runtime.Systems.Core.DeterministicRng.NextFloat01(TestTFT.Scripts.Runtime.Systems.Core.DeterministicRng.Stream.Loot) > 0.5f;
                     _economy.AddStreak(win);
                 }
                 _economy.AddGold(5); // base income
@@ -185,6 +187,7 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
         private void BuildBench()
         {
             var bench = new GameObject("Bench");
+            _benchRoot = bench;
             bench.transform.SetParent(_canvas.transform, false);
             var rt = bench.AddComponent<RectTransform>();
             rt.anchorMin = new Vector2(0.5f, 0);
@@ -216,7 +219,44 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
                 unit.AddComponent<TestTFT.Scripts.Runtime.UI.Common.Selection.SelectOnClick>();
                 var sell = unit.AddComponent<TestTFT.Scripts.Runtime.UI.Common.Selection.SellOnDelete>();
                 sell.Init(_economy);
+
+                // Sample trait assignment for demo purposes
+                var ut = unit.AddComponent<TestTFT.Scripts.Runtime.Systems.Traits.UnitTraits>();
+                if (i % 3 == 0) ut.baseTraits.Add("warrior");
+                if (i % 3 == 1) ut.baseTraits.Add("ranger");
+                if (i % 3 == 2) ut.baseTraits.Add("mystic");
+                if (i == 0) ut.emblems.Add("warrior"); // example emblem on first
             }
+        }
+
+        private void BuildTraitsUI()
+        {
+            var panel = new GameObject("TraitsPanel");
+            panel.transform.SetParent(_canvas.transform, false);
+            var rt = panel.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(1, 1);
+            rt.anchorMax = new Vector2(1, 1);
+            rt.pivot = new Vector2(1, 1);
+            rt.anchoredPosition = new Vector2(-20, -20);
+
+            var bg = panel.AddComponent<Image>();
+            bg.color = new Color(0, 0, 0, 0.35f);
+
+            var textGo = new GameObject("Text");
+            textGo.transform.SetParent(panel.transform, false);
+            var t = textGo.AddComponent<Text>();
+            t.color = Color.white;
+            t.font = Resources.GetBuiltinResource<Font>("Arial.ttf");
+            t.alignment = TextAnchor.UpperLeft;
+            var trt = t.GetComponent<RectTransform>();
+            trt.sizeDelta = new Vector2(260, 160);
+
+            var traitsUI = panel.AddComponent<TestTFT.Scripts.Runtime.UI.Traits.TraitsUIController>();
+            traitsUI.output = t;
+
+            // Attach a roster tracker to the bench and bind
+            var tracker = _benchRoot.AddComponent<TestTFT.Scripts.Runtime.Systems.Traits.RosterTracker>();
+            traitsUI.BindToRoster(tracker);
         }
 
         private void BuildTooltip()

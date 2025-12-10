@@ -12,7 +12,8 @@ namespace TestTFT.Scripts.Runtime.UI.Common.DragDrop
             var rect = drag.GetComponent<RectTransform>();
             drag.transform.SetParent(transform);
             rect.anchoredPosition = Vector2.zero;
+            // Notify roster systems that a drop occurred (roster potentially changed)
+            TestTFT.Scripts.Runtime.Systems.Traits.RosterEvents.Raise();
         }
     }
 }
-
