@@ -46,6 +46,43 @@ namespace TestTFT.Scripts.Runtime.Systems.Simulation
             }
         }
 
+        // Finds the nearest living unit excluding the seeker itself.
+        // Note: Team logic TBD — currently treats all other units as hostile.
+        public static UnitBehaviour FindNearestLivingUnit(UnitBehaviour seeker)
+        {
+            if (seeker == null) return null;
+            var seekerPos = seeker.transform.position;
+            UnitBehaviour best = null;
+            float bestDistSq = float.PositiveInfinity;
+
+            for (int i = 0; i < Units.Count; i++)
+            {
+                var u = Units[i];
+                if (u == null || u == seeker) continue;
+                if (!u.isActiveAndEnabled) continue;
+                var h = u.Health;
+                if (h == null || h.IsDead) continue;
+
+                var d = (u.transform.position - seekerPos);
+                float distSq = d.x * d.x + d.y * d.y + d.z * d.z;
+                if (distSq < bestDistSq - 1e-6f)
+                {
+                    bestDistSq = distSq;
+                    best = u;
+                }
+                else if (Mathf.Abs(distSq - bestDistSq) <= 1e-6f)
+                {
+                    // Tie-breaker: stable by instanceID to keep determinism
+                    if (u.GetInstanceID() < (best?.GetInstanceID() ?? int.MaxValue))
+                    {
+                        best = u;
+                    }
+                }
+            }
+
+            return best;
+        }
+
         public static void Register(UnitBehaviour u)
         {
             if (u != null && !Units.Contains(u)) Units.Add(u);

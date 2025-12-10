@@ -43,6 +43,7 @@ namespace TestTFT.Scripts.Runtime.Combat.Unit
         Transform IActor.transform => transform;
 
         public UnitStatus Status => status;
+        public GameObject CurrentTarget => target;
         public IReadOnlyList<string> Inventory => _inventory;
 
         private void Awake()
@@ -96,18 +97,30 @@ namespace TestTFT.Scripts.Runtime.Combat.Unit
             // Refresh cooldowns
             if (_attackCd > 0f) _attackCd -= dt;
 
-            // If no target or target dead -> Idle
+            // Ensure we have a valid target; try to auto-acquire nearest living unit if missing or dead
+            bool needTarget = false;
             if (target == null || !target.activeInHierarchy)
             {
-                status = UnitStatus.Idle;
-                return;
+                needTarget = true;
+            }
+            else
+            {
+                var th = target.GetComponent<HealthComponent>();
+                if (th == null || th.IsDead) needTarget = true;
             }
 
-            var targetHealth = target.GetComponent<HealthComponent>();
-            if (targetHealth != null && targetHealth.IsDead)
+            if (needTarget)
             {
-                status = UnitStatus.Idle;
-                return;
+                var nearest = Systems.Simulation.SimulationSystem.FindNearestLivingUnit(this);
+                if (nearest != null)
+                {
+                    target = nearest.gameObject;
+                }
+                else
+                {
+                    status = UnitStatus.Idle;
+                    return;
+                }
             }
 
             float dist = Vector3.Distance(transform.position, target.transform.position);
@@ -174,4 +187,3 @@ namespace TestTFT.Scripts.Runtime.Combat.Unit
         }
     }
 }
-
