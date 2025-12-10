@@ -16,6 +16,7 @@ namespace TestTFT.Scripts.Runtime.UI.HUD
         public Text timerText;
         public Button rerollButton;
         public Button lockButton;
+        public Button buyXpButton;
 
         private EconomySystem _economy;
         private ShopSystem _shop;
@@ -33,6 +34,7 @@ namespace TestTFT.Scripts.Runtime.UI.HUD
 
             rerollButton.onClick.AddListener(() => OnReroll());
             lockButton.onClick.AddListener(() => OnLock());
+            if (buyXpButton != null) buyXpButton.onClick.AddListener(() => OnBuyXp());
 
             if (xpFill)
             {
@@ -82,13 +84,22 @@ namespace TestTFT.Scripts.Runtime.UI.HUD
             // Reroll costs 2g typical
             if (_economy.TrySpend(2))
             {
-                _shop.Reroll();
+                _shop.RerollForLevel(_economy.Level);
             }
         }
 
         private void OnLock()
         {
             _shop.ToggleLock();
+        }
+
+        private void OnBuyXp()
+        {
+            // MVP: Spend 4g for 4 XP
+            if (_economy.TrySpend(4))
+            {
+                _economy.AddXp(4);
+            }
         }
     }
 }
