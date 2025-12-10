@@ -20,6 +20,7 @@ namespace TestTFT.Scripts.Runtime.Combat.Effects
 
         private HealthComponent _health;
         private bool _stunned;
+        [SerializeField] private bool useExternalTick = false;
 
         private void Awake()
         {
@@ -28,7 +29,12 @@ namespace TestTFT.Scripts.Runtime.Combat.Effects
 
         private void Update()
         {
-            float dt = Time.deltaTime;
+            if (useExternalTick) return;
+            SimTick(Time.deltaTime);
+        }
+
+        public void SimTick(float dt)
+        {
             for (int i = _effects.Count - 1; i >= 0; i--)
             {
                 var e = _effects[i];
@@ -147,6 +153,11 @@ namespace TestTFT.Scripts.Runtime.Combat.Effects
                 }
             }
             return mult;
+        }
+
+        public void SetUseExternalTick(bool value)
+        {
+            useExternalTick = value;
         }
     }
 }

@@ -13,6 +13,9 @@ namespace TestTFT.Scripts.Runtime.Combat
 
         [SerializeField] private float currentMana;
 
+        [Header("Simulation")] 
+        [SerializeField] private bool useExternalTick = false;
+
         public float MaxMana => maxMana;
         public float StartMana => startMana;
         public float CurrentMana => currentMana;
@@ -26,9 +29,15 @@ namespace TestTFT.Scripts.Runtime.Combat
 
         private void Update()
         {
+            if (useExternalTick) return;
+            SimTick(Time.deltaTime);
+        }
+
+        public void SimTick(float dt)
+        {
             if (regenPerSecond > 0f && currentMana < maxMana)
             {
-                GainMana(regenPerSecond * Time.deltaTime);
+                GainMana(regenPerSecond * dt);
             }
         }
 
@@ -53,6 +62,10 @@ namespace TestTFT.Scripts.Runtime.Combat
             if (manaOnHit > 0f)
                 GainMana(manaOnHit);
         }
+
+        public void SetUseExternalTick(bool value)
+        {
+            useExternalTick = value;
+        }
     }
 }
-
