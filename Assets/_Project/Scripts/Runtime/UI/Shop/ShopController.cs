@@ -66,6 +66,20 @@ namespace TestTFT.Scripts.Runtime.UI.Shop
             }
         }
 
+        // Expose a safe buy API for bots
+        public bool TryBuySlot(int index)
+        {
+            if (index < 0 || index >= 5) return false;
+            var offer = _shop.Get(index);
+            if (_bench != null && !_bench.HasFreeSlot()) return false;
+            if (!_economy.TrySpend(offer.Cost)) return false;
+
+            _bench?.AddUnit(offer.Name, offer.Cost);
+            _economy.AddXp(1);
+            SetEmpty(index);
+            return true;
+        }
+
         private void SetEmpty(int index)
         {
             if (index < 0 || index >= slots.Length) return;
