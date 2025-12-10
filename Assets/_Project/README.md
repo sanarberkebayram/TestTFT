@@ -17,11 +17,11 @@ Namespaces mirror the folder path, using `TestTFT` as the root.
 
 - Entry: `Systems/Bootstrap/GameEntry.cs` ensures `UIBootstrap` is spawned at runtime.
 - Systems: `EconomySystem`, `ShopSystem`, `GameLoopSystem` drive the loop.
-- HUD: Gold, streak, XP bar, reroll/lock, timer.
+- HUD: Gold, streak, XP bar, reroll/lock, buy XP (4g), timer.
 - Shop: 5 cards with buy buttons and keys [1..5].
 - Drag-drop: Draggable units on 8 bench slots; Delete key sells selected unit.
 - Tooltips: Basic hover tooltips on units.
 
 How to run:
 - Open `Assets/Scenes/SampleScene.unity` and press Play.
-- Use keys 1..5 to buy; click Reroll/Lock; press Delete to sell a selected bench unit; drag units between bench slots.
+- Use keys 1..5 to buy; click Reroll/Lock/Buy XP; press Delete to sell a selected bench unit; drag units between bench slots. Buying spawns to the first free bench slot. 3 copies combine automatically.

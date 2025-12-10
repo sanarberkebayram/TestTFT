@@ -19,11 +19,13 @@ namespace TestTFT.Scripts.Runtime.UI.Shop
 
         private EconomySystem _economy;
         private ShopSystem _shop;
+        private TestTFT.Scripts.Runtime.UI.Bench.BenchController _bench;
 
-        public void Init(EconomySystem economy, ShopSystem shop)
+        public void Init(EconomySystem economy, ShopSystem shop, TestTFT.Scripts.Runtime.UI.Bench.BenchController bench)
         {
             _economy = economy;
             _shop = shop;
+            _bench = bench;
             _shop.OnChanged += Refresh;
 
             for (int i = 0; i < slots.Length; i++)
@@ -54,9 +56,11 @@ namespace TestTFT.Scripts.Runtime.UI.Shop
         {
             if (index < 0 || index >= 5) return;
             var offer = _shop.Get(index);
+            if (_bench != null && !_bench.HasFreeSlot()) return;
             if (_economy.TrySpend(offer.Cost))
             {
-                // In MVP, "purchase" just clears the slot and grants small XP
+                // Spawn onto bench and grant small XP
+                _bench?.AddUnit(offer.Name, offer.Cost);
                 _economy.AddXp(1);
                 SetEmpty(index);
             }
@@ -82,4 +86,3 @@ namespace TestTFT.Scripts.Runtime.UI.Shop
         }
     }
 }
-
