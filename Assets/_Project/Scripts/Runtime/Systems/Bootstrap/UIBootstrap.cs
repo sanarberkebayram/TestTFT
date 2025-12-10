@@ -17,6 +17,7 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
         private PlayerHealthSystem _health;
         private CarouselSystem _carousel;
         private GameObject _benchRoot;
+        private GameObject _boardRoot;
 
         private Canvas _canvas;
 
@@ -40,6 +41,7 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
         {
             BuildHUD();
             BuildBench();
+            BuildBoard();
             BuildShop();
             BuildCarousel();
             BuildTraitsUI();
@@ -47,6 +49,15 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
             _loop.OnPhaseChanged += OnPhaseChanged;
             _loop.OnRoundResolved += OnRoundResolved;
             _loop.ForceShop(20f);
+
+            // Attach simple bot to drive shop + board
+            var botGo = new GameObject("BotManager");
+            botGo.transform.SetParent(_canvas.transform, false);
+            var bot = botGo.AddComponent<TestTFT.Scripts.Runtime.Systems.AI.BotManager>();
+            var benchCtrl = _benchRoot.GetComponent<TestTFT.Scripts.Runtime.UI.Bench.BenchController>();
+            var boardCtrl = _boardRoot.GetComponent<TestTFT.Scripts.Runtime.UI.Board.BoardController>();
+            var roster = _benchRoot.GetComponent<TestTFT.Scripts.Runtime.Systems.Traits.RosterTracker>();
+            bot.Init(_economy, _shop, _loop, benchCtrl, boardCtrl, roster);
         }
 
         private void Update()
@@ -69,7 +80,7 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
             {
                 // PR29: economy payout happens on OnRoundResolved; just reroll shop on entering Shop phase
                 _firstShop = false;
-                _shop.Reroll();
+                _shop.RerollForLevel(_economy.Level);
             }
             else if (phase == GameLoopSystem.Phase.Carousel)
             {
@@ -292,6 +303,21 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
             // Attach a roster tracker to the bench and bind
             var tracker = _benchRoot.AddComponent<TestTFT.Scripts.Runtime.Systems.Traits.RosterTracker>();
             traitsUI.BindToRoster(tracker);
+        }
+
+        private void BuildBoard()
+        {
+            var board = new GameObject("Board");
+            _boardRoot = board;
+            board.transform.SetParent(_canvas.transform, false);
+            var rt = board.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0f);
+            rt.anchorMax = new Vector2(0.5f, 0f);
+            rt.pivot = new Vector2(0.5f, 0f);
+            rt.anchoredPosition = new Vector2(0, 200); // above bench
+
+            var ctrl = board.AddComponent<TestTFT.Scripts.Runtime.UI.Board.BoardController>();
+            ctrl.Init(7);
         }
 
         private void BuildTooltip()

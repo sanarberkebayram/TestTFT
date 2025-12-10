@@ -51,6 +51,12 @@ namespace TestTFT.Scripts.Runtime.UI.Bench
 
             // Optional: traits could be assigned by name in future
             var traits = unit.AddComponent<UnitTraits>();
+            // Assign base traits from catalog so TraitSystem can compute synergies
+            var traitList = TestTFT.Scripts.Runtime.Systems.Gameplay.UnitCatalog.GetTraits(unitName);
+            foreach (var t in traitList)
+            {
+                if (!string.IsNullOrEmpty(t)) traits.baseTraits.Add(t);
+            }
 
             // Notify systems that roster changed
             RosterEvents.Raise();
@@ -70,4 +76,3 @@ namespace TestTFT.Scripts.Runtime.UI.Bench
         }
     }
 }
-
