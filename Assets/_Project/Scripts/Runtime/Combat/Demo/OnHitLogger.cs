@@ -10,8 +10,7 @@ namespace TestTFT.Scripts.Runtime.Combat.Demo
         public void OnHit(OnHitInfo info)
         {
             if (!logToConsole) return;
-            Debug.Log($"OnHit: caster={info.Caster?.name}, target={info.Target?.name}, dmg={info.DamageDealt:F1}, crit={info.IsCrit}");
+            Debug.Log($"OnHit: caster={info.Caster?.name}, target={info.Target?.name}, dmg={info.DamageDealt:F1}, crit={info.IsCrit}, dodged={info.IsDodged}, type={info.DamageType}");
         }
     }
 }
-
