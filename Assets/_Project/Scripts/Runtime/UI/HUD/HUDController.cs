@@ -14,22 +14,28 @@ namespace TestTFT.Scripts.Runtime.UI.HUD
         public Text interestText;
         public Image xpFill;
         public Text timerText;
+        public Text stageText;
+        public Text hpText;
         public Button rerollButton;
         public Button lockButton;
 
         private EconomySystem _economy;
         private ShopSystem _shop;
         private GameLoopSystem _loop;
+        private PlayerHealthSystem _health;
 
-        public void Init(EconomySystem economy, ShopSystem shop, GameLoopSystem loop)
+        public void Init(EconomySystem economy, ShopSystem shop, GameLoopSystem loop, PlayerHealthSystem health)
         {
             _economy = economy;
             _shop = shop;
             _loop = loop;
+            _health = health;
 
             _economy.OnChanged += RefreshEconomy;
             _shop.OnChanged += RefreshShop;
             _loop.OnTimer += OnTimer;
+            _loop.OnRoundStarted += OnRoundStarted;
+            if (_health != null) _health.OnChanged += RefreshHealth;
 
             rerollButton.onClick.AddListener(() => OnReroll());
             lockButton.onClick.AddListener(() => OnLock());
@@ -44,13 +50,19 @@ namespace TestTFT.Scripts.Runtime.UI.HUD
 
             RefreshEconomy();
             RefreshShop();
+            RefreshHealth();
         }
 
         private void OnDestroy()
         {
             if (_economy != null) _economy.OnChanged -= RefreshEconomy;
             if (_shop != null) _shop.OnChanged -= RefreshShop;
-            if (_loop != null) _loop.OnTimer -= OnTimer;
+            if (_loop != null)
+            {
+                _loop.OnTimer -= OnTimer;
+                _loop.OnRoundStarted -= OnRoundStarted;
+            }
+            if (_health != null) _health.OnChanged -= RefreshHealth;
         }
 
         private void RefreshEconomy()
@@ -75,6 +87,23 @@ namespace TestTFT.Scripts.Runtime.UI.HUD
         {
             if (!timerText) return;
             timerText.text = $"{Mathf.CeilToInt(remaining)}s";
+        }
+
+        private void OnRoundStarted(int stage, int stageRound, bool isPvE)
+        {
+            if (stageText)
+            {
+                var pve = isPvE ? " PvE" : " PvP";
+                stageText.text = $"Stage {stage}-{stageRound}{pve}";
+            }
+        }
+
+        private void RefreshHealth()
+        {
+            if (hpText && _health != null)
+            {
+                hpText.text = $"HP: {_health.Hp}/{_health.MaxHp}";
+            }
         }
 
         private void OnReroll()

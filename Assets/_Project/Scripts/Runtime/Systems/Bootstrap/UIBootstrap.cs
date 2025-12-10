@@ -13,6 +13,7 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
         private EconomySystem _economy;
         private ShopSystem _shop;
         private GameLoopSystem _loop;
+        private PlayerHealthSystem _health;
         private GameObject _benchRoot;
 
         private Canvas _canvas;
@@ -29,6 +30,7 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
             _shop = new ShopSystem();
             _shop.Reroll();
             _loop = new GameLoopSystem();
+            _health = new PlayerHealthSystem();
         }
 
         private void Start()
@@ -39,6 +41,7 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
             BuildTraitsUI();
             BuildTooltip();
             _loop.OnPhaseChanged += OnPhaseChanged;
+            _loop.OnRoundResolved += OnRoundResolved;
             _loop.ForceShop(20f);
         }
 
@@ -49,25 +52,35 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
 
         private void OnDestroy()
         {
-            if (_loop != null) _loop.OnPhaseChanged -= OnPhaseChanged;
+            if (_loop != null)
+            {
+                _loop.OnPhaseChanged -= OnPhaseChanged;
+                _loop.OnRoundResolved -= OnRoundResolved;
+            }
         }
 
         private void OnPhaseChanged(GameLoopSystem.Phase phase)
         {
             if (phase == GameLoopSystem.Phase.Shop)
             {
-                if (_firstShop)
-                {
-                    _firstShop = false;
-                }
-                else
-                {
-                    bool win = TestTFT.Scripts.Runtime.Systems.Core.DeterministicRng.NextFloat01(TestTFT.Scripts.Runtime.Systems.Core.DeterministicRng.Stream.Loot) > 0.5f;
-                    _economy.AddStreak(win);
-                }
-                _economy.AddGold(5); // base income
-                _economy.GainInterest();
+                _firstShop = false;
                 _shop.Reroll();
+            }
+        }
+
+        private void OnRoundResolved(bool isPve, bool win, int damage)
+        {
+            // Economy payout happens at end of combat (entering shop next)
+            _economy.AddGold(5); // base income MVP
+            _economy.GainInterest();
+
+            if (!isPve)
+            {
+                _economy.AddStreak(win);
+                if (!win && damage > 0)
+                {
+                    _health.ApplyDamage(damage);
+                }
             }
         }
 
@@ -107,6 +120,8 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
             var streak = CreateText("Streak: 0", hud.transform);
             var interest = CreateText("Interest: 0", hud.transform);
             var xp = CreateText("LV 1  XP 0/6", hud.transform);
+            var stage = CreateText("Stage 1-1 PvE", hud.transform);
+            var hp = CreateText("HP: 100/100", hud.transform);
 
             var xpBarGo = new GameObject("XPBar");
             xpBarGo.transform.SetParent(hud.transform, false);
@@ -135,10 +150,12 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
             ctrl.xpText = xp;
             ctrl.xpFill = xpFill;
             ctrl.timerText = timer;
+            ctrl.stageText = stage;
+            ctrl.hpText = hp;
             ctrl.rerollButton = reroll;
             ctrl.lockButton = lck;
             ctrl.interestText = interest;
-            ctrl.Init(_economy, _shop, _loop);
+            ctrl.Init(_economy, _shop, _loop, _health);
         }
 
         private void BuildShop()
