@@ -36,6 +36,7 @@ namespace TestTFT.Scripts.Runtime.UI.HUD
             _shop.OnChanged += RefreshShop;
             _loop.OnTimer += OnTimer;
             _loop.OnRoundStarted += OnRoundStarted;
+            _loop.OnPhaseChanged += OnPhaseChanged;
             if (_health != null) _health.OnChanged += RefreshHealth;
 
             rerollButton.onClick.AddListener(() => OnReroll());
@@ -53,6 +54,8 @@ namespace TestTFT.Scripts.Runtime.UI.HUD
             RefreshEconomy();
             RefreshShop();
             RefreshHealth();
+            // Initialize button states based on starting phase
+            OnPhaseChanged(_loop.CurrentPhase);
         }
 
         private void OnDestroy()
@@ -63,6 +66,7 @@ namespace TestTFT.Scripts.Runtime.UI.HUD
             {
                 _loop.OnTimer -= OnTimer;
                 _loop.OnRoundStarted -= OnRoundStarted;
+                _loop.OnPhaseChanged -= OnPhaseChanged;
             }
             if (_health != null) _health.OnChanged -= RefreshHealth;
         }
@@ -120,6 +124,13 @@ namespace TestTFT.Scripts.Runtime.UI.HUD
         private void OnLock()
         {
             _shop.ToggleLock();
+        }
+        
+        private void OnPhaseChanged(GameLoopSystem.Phase p)
+        {
+            bool shopActive = p == GameLoopSystem.Phase.Shop;
+            if (rerollButton) rerollButton.interactable = shopActive;
+            if (lockButton) lockButton.interactable = shopActive;
         }
 
         private void OnBuyXp()

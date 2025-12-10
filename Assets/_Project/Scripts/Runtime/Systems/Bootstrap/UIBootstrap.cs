@@ -2,6 +2,7 @@ using TestTFT.Scripts.Runtime.Systems.Gameplay;
 using TestTFT.Scripts.Runtime.UI.Common.Tooltip;
 using TestTFT.Scripts.Runtime.UI.HUD;
 using TestTFT.Scripts.Runtime.UI.Shop;
+using TestTFT.Scripts.Runtime.UI.Carousel;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
@@ -14,6 +15,7 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
         private ShopSystem _shop;
         private GameLoopSystem _loop;
         private PlayerHealthSystem _health;
+        private CarouselSystem _carousel;
         private GameObject _benchRoot;
 
         private Canvas _canvas;
@@ -31,6 +33,7 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
             _shop.RerollForLevel(_economy.Level);
             _loop = new GameLoopSystem();
             _health = new PlayerHealthSystem();
+            _carousel = new CarouselSystem();
         }
 
         private void Start()
@@ -38,6 +41,7 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
             BuildHUD();
             BuildBench();
             BuildShop();
+            BuildCarousel();
             BuildTraitsUI();
             BuildTooltip();
             _loop.OnPhaseChanged += OnPhaseChanged;
@@ -66,6 +70,10 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
                 // PR29: economy payout happens on OnRoundResolved; just reroll shop on entering Shop phase
                 _firstShop = false;
                 _shop.Reroll();
+            }
+            else if (phase == GameLoopSystem.Phase.Carousel)
+            {
+                _carousel.StartRound();
             }
         }
 
@@ -344,6 +352,52 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
             var size = go.GetComponent<RectTransform>();
             size.sizeDelta = new Vector2(160, 28);
             return btn;
+        }
+        private void BuildCarousel()
+        {
+            var panel = new GameObject("Carousel");
+            panel.transform.SetParent(_canvas.transform, false);
+            var rt = panel.AddComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0.5f);
+            rt.anchorMax = new Vector2(0.5f, 0.5f);
+            rt.pivot = new Vector2(0.5f, 0.5f);
+            rt.anchoredPosition = Vector2.zero;
+
+            var bg = panel.AddComponent<Image>();
+            bg.color = new Color(0, 0, 0, 0.4f);
+
+            var grid = panel.AddComponent<GridLayoutGroup>();
+            grid.cellSize = new Vector2(200, 80);
+            grid.spacing = new Vector2(12, 12);
+            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            grid.constraintCount = 4; // 4x2 grid
+
+            var ctrl = panel.AddComponent<CarouselController>();
+            ctrl.slots = new CarouselController.Slot[8];
+            for (int i = 0; i < 8; i++)
+            {
+                var slot = new GameObject($"CarouselSlot{i + 1}");
+                slot.transform.SetParent(panel.transform, false);
+                var bgSlot = slot.AddComponent<Image>();
+                bgSlot.color = new Color(0, 0, 0, 0.25f);
+
+                var name = CreateText("Name", slot.transform);
+                var cost = CreateText("1g", slot.transform);
+                var btn = CreateButton($"Pick [{i + 1}]", slot.transform);
+
+                var layout = slot.AddComponent<VerticalLayoutGroup>();
+                layout.spacing = 2f;
+                layout.childControlHeight = true;
+
+                ctrl.slots[i] = new CarouselController.Slot
+                {
+                    nameText = name,
+                    costText = cost,
+                    selectButton = btn
+                };
+            }
+            ctrl.Init(_economy, _carousel, _loop);
+            panel.SetActive(false);
         }
     }
 }
