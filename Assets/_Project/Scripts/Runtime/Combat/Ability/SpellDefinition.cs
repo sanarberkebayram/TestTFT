@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using TestTFT.Scripts.Runtime.Combat;
 using TestTFT.Scripts.Runtime.Combat.Effects;
 
 namespace TestTFT.Scripts.Runtime.Combat.Ability
@@ -11,6 +12,7 @@ namespace TestTFT.Scripts.Runtime.Combat.Ability
         [Min(0f)] public float manaCost = 0f;
 
         [Header("Damage & Crit")]
+        public DamageType damageType = DamageType.Physical;
         [Min(0f)] public float baseDamage = 0f;
         [Range(0f, 1f)] public float critChance = 0f;
         [Min(1f)] public float critMultiplier = 1.5f;
@@ -19,4 +21,3 @@ namespace TestTFT.Scripts.Runtime.Combat.Ability
         public List<EffectDefinition> effects = new List<EffectDefinition>();
     }
 }
-

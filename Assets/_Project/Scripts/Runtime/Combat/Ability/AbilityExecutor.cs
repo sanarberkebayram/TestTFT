@@ -31,30 +31,59 @@ namespace TestTFT.Scripts.Runtime.Combat.Ability
             if (!CanCast(spell)) return false;
             if (!mana.Spend(spell.manaCost)) return false; // double-guard
 
-            // Resolve crit
-            bool isCrit = UnityEngine.Random.value < spell.critChance;
-            float outgoingMult = effects != null ? effects.GetOutgoingDamageMultiplier() : 1f;
-            float damage = Mathf.Max(0f, spell.baseDamage) * outgoingMult;
-            if (isCrit)
-                damage *= Mathf.Max(1f, spell.critMultiplier);
+            // Global timing
+            CombatTime.EnsureStarted();
 
+            bool isDodged = false;
+            bool isCrit = false;
             float dealt = 0f;
+
             if (target != null && target.TryGetComponent<HealthComponent>(out var targetHealth))
             {
-                dealt = targetHealth.ApplyDamage(damage, new DamageContext(gameObject, target, isCrit));
-
-                // Apply effects on hit
-                if (dealt > 0f && target.TryGetComponent<EffectsController>(out var targetEffects))
+                // Dodge resolves before crit
+                CombatStats targetStats = null;
+                target.TryGetComponent<CombatStats>(out targetStats);
+                if (targetStats != null && targetStats.RollDodge())
                 {
-                    foreach (var eff in spell.effects)
+                    isDodged = true;
+                    dealt = 0f;
+                }
+                else
+                {
+                    // Crit resolves after dodge
+                    isCrit = UnityEngine.Random.value < spell.critChance;
+
+                    float outgoingMult = effects != null ? effects.GetOutgoingDamageMultiplier() : 1f;
+                    // Apply global overtime multiplier
+                    outgoingMult *= CombatTime.GetOvertimeDamageMultiplier();
+
+                    float damage = Mathf.Max(0f, spell.baseDamage) * outgoingMult;
+                    if (isCrit)
+                        damage *= Mathf.Max(1f, spell.critMultiplier);
+
+                    // Apply mitigation based on damage type
+                    float mitigation = 1f;
+                    if (targetStats != null)
                     {
-                        targetEffects.ApplyEffect(eff, gameObject);
+                        mitigation = targetStats.GetMitigationMultiplier(spell.damageType);
+                    }
+
+                    float finalDamage = damage * mitigation;
+                    dealt = targetHealth.ApplyDamage(finalDamage, new DamageContext(gameObject, target, isCrit));
+
+                    // Apply effects on hit only if damage dealt
+                    if (dealt > 0f && target.TryGetComponent<EffectsController>(out var targetEffects))
+                    {
+                        foreach (var eff in spell.effects)
+                        {
+                            targetEffects.ApplyEffect(eff, gameObject);
+                        }
                     }
                 }
             }
 
             // Invoke on-hit hooks (local listeners)
-            var info = new OnHitInfo(gameObject, target, dealt, isCrit);
+            var info = new OnHitInfo(gameObject, target, dealt, isCrit, isDodged, spell != null ? spell.damageType : DamageType.Physical);
             BroadcastOnHit(info);
 
             return true;
