@@ -41,7 +41,15 @@ namespace TestTFT.Scripts.Runtime.Systems.Gameplay
                     var img = keeper.GetComponent<UnityEngine.UI.Image>();
                     if (img != null)
                     {
-                        img.color *= 1.15f;
+                        // Derive tint deterministically from star level (avoid multiplicative drift)
+                        var baseTint = new Color(0.5f, 0.7f, 1f, 0.9f);
+                        int star = Mathf.Max(1, keeper.Star);
+                        float scale = 1f + 0.15f * (star - 1); // 1★=1.0, 2★=1.15, 3★=1.30
+                        img.color = new Color(
+                            Mathf.Clamp01(baseTint.r * scale),
+                            Mathf.Clamp01(baseTint.g * scale),
+                            Mathf.Clamp01(baseTint.b * scale),
+                            baseTint.a);
                     }
 
                     for (int i = 1; i < three.Count; i++)
@@ -57,4 +65,3 @@ namespace TestTFT.Scripts.Runtime.Systems.Gameplay
         }
     }
 }
-
