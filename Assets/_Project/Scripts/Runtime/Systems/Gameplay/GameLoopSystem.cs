@@ -70,7 +70,14 @@ namespace TestTFT.Scripts.Runtime.Systems.Gameplay
             }
             else if (CurrentPhase == Phase.Combat)
             {
-                if (IsCarouselRound(RoundIndex + 1))
+                // Resolve the just-finished combat round first
+                var (isPve, win, damage) = ResolveRoundOutcome();
+                OnRoundResolved?.Invoke(isPve, win, damage);
+
+                // Progress round counters for the next round
+                IncrementRound();
+
+                if (IsCarouselRound(RoundIndex))
                 {
                     CurrentPhase = Phase.Carousel;
                     PhaseDuration = 12f; // short carousel window
@@ -78,20 +85,13 @@ namespace TestTFT.Scripts.Runtime.Systems.Gameplay
                 else
                 {
                     CurrentPhase = Phase.Shop;
-                    PhaseDuration = 20f;
-                    RoundIndex++;
+                    // Configure round (PvE/PvP) and durations for the next round's shop
+                    ConfigureRoundForCurrentIndex();
                 }
             }
             else // Carousel -> Shop
             {
-                // Resolve round on combat end, then move to next round's shop
-                var (isPve, win, damage) = ResolveRoundOutcome();
-                OnRoundResolved?.Invoke(isPve, win, damage);
-
-                // Progress round counters
-                IncrementRound();
-
-                // Prepare next round (shop)
+                // After carousel finishes, enter the next round's shop
                 CurrentPhase = Phase.Shop;
                 ConfigureRoundForCurrentIndex();
             }
@@ -143,10 +143,19 @@ namespace TestTFT.Scripts.Runtime.Systems.Gameplay
             int damage = 0;
             if (!isPve && !win)
             {
-                // Simple damage model: base damage equals current stage
-                damage = Mathf.Max(1, Stage);
+                // Damage = StageBase + SurvivingStarDamage (MVP: random survivors proxy)
+                int stageBase = Mathf.Max(1, Stage);
+                int survivingStarDamage = ComputeSurvivingStarDamage();
+                damage = stageBase + survivingStarDamage;
             }
             return (isPve, win, damage);
+        }
+
+        // MVP approximation: return 0-3 star damage using deterministic RNG
+        private int ComputeSurvivingStarDamage()
+        {
+            // Later: compute from actual surviving enemy units and their star levels
+            return DeterministicRng.NextInt(DeterministicRng.Stream.Loot, 0, 4); // 0..3
         }
 
         // Allows UI to finish carousel early (e.g., after pick)
@@ -156,7 +165,8 @@ namespace TestTFT.Scripts.Runtime.Systems.Gameplay
             PhaseTime = 0f;
             CurrentPhase = Phase.Shop;
             PhaseDuration = 20f;
-            RoundIndex++;
+            // Entering shop for the next configured round (round index already incremented in Combat branch)
+            ConfigureRoundForCurrentIndex();
             OnPhaseChanged?.Invoke(CurrentPhase);
             OnTimer?.Invoke(PhaseDuration - PhaseTime, PhaseDuration);
         }

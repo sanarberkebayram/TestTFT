@@ -91,6 +91,12 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
                     _health.ApplyDamage(damage);
                 }
             }
+            else
+            {
+                // PvE loot orbs MVP: grant 1-2 gold using deterministic RNG
+                int loot = TestTFT.Scripts.Runtime.Systems.Core.DeterministicRng.NextInt(TestTFT.Scripts.Runtime.Systems.Core.DeterministicRng.Stream.Loot, 1, 3);
+                _economy.AddGold(loot);
+            }
         }
 
         private static void EnsureEventSystem()
