@@ -1,5 +1,6 @@
 using System;
 using UnityEngine;
+using TestTFT.Scripts.Runtime.Systems.Core;
 
 namespace TestTFT.Scripts.Runtime.Systems.Gameplay
 {
@@ -117,7 +118,7 @@ namespace TestTFT.Scripts.Runtime.Systems.Gameplay
         {
             bool isPve = IsPvE;
             // Placeholder resolution: random outcome for PvP, always win PvE for MVP
-            bool win = isPve ? true : UnityEngine.Random.value > 0.5f;
+            bool win = isPve ? true : DeterministicRng.NextFloat01(DeterministicRng.Stream.Loot) > 0.5f;
             int damage = 0;
             if (!isPve && !win)
             {

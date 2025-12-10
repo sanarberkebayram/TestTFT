@@ -16,6 +16,7 @@ Match Structure:
 - Players: 8 (FFA), shared round pacing.
 - Health: Start [TBD] HP; lose HP on round loss by opponent board strength.
 - Rounds: PvE opener → PvP cycles → Carousel intervals → Boss/loot rounds as milestones.
+- Timing (MVP): PvE rounds 1–3 use 15s Shop and 15s Combat; subsequent PvP rounds use 20s Shop and 15s Combat.
 - Victory: Last player standing.
 
 Board & Units:
@@ -47,6 +48,7 @@ Combat Rules:
 - Positioning: Collision, walk speed, and pathing simple and deterministic.
 - Resolution: Fight ends on team wipe or timeout [TBD] → draw handling [TBD].
 - Damage to Player: Based on surviving enemy unit stars + base round damage [TBD].
+  - MVP placeholder: PvP loss deals damage equal to current Stage (min 1).
 
 Progression & Fairness:
 - Shop Odds by Level: Weighted table; monotonic increase for higher-cost units.
@@ -93,6 +95,7 @@ Telemetry (If enabled):
 
 Technical Notes:
 - Determinism: Seed per match; shop/loot/targeting seeded; record/replay support.
+- RNG streams (MVP): Loot, Shop, Targeting, Projectile, Carousel.
 - Data: SO-driven content, addressable assets; versioned balance patches.
 - Performance: Burst where applicable for sim; object pooling for VFX.
 
@@ -106,4 +109,3 @@ Open Questions [TBD]:
 Appendix: Initial Defaults (Proposed, placeholder)
 - Players: 8; Start HP: 100; Board slots at Lvl 1–9: 2,3,4,5,6,7,8,8,9.
 - Shop odds table and all numeric values intentionally left TBD for balancing passes.
-
