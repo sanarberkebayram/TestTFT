@@ -8,7 +8,8 @@ namespace TestTFT.Scripts.Runtime.Systems.Gameplay
         public enum Phase
         {
             Shop,
-            Combat
+            Combat,
+            Carousel
         }
 
         public Phase CurrentPhase { get; private set; } = Phase.Shop;
@@ -41,6 +42,12 @@ namespace TestTFT.Scripts.Runtime.Systems.Gameplay
             OnTimer?.Invoke(PhaseDuration - PhaseTime, PhaseDuration);
         }
 
+        private bool IsCarouselRound(int round)
+        {
+            // Simple MVP rule: every 3rd round has a carousel
+            return round > 0 && (round % 3 == 0);
+        }
+
         private void Advance()
         {
             PhaseTime = 0f;
@@ -49,7 +56,21 @@ namespace TestTFT.Scripts.Runtime.Systems.Gameplay
                 CurrentPhase = Phase.Combat;
                 PhaseDuration = 15f;
             }
-            else
+            else if (CurrentPhase == Phase.Combat)
+            {
+                if (IsCarouselRound(RoundIndex + 1))
+                {
+                    CurrentPhase = Phase.Carousel;
+                    PhaseDuration = 12f; // short carousel window
+                }
+                else
+                {
+                    CurrentPhase = Phase.Shop;
+                    PhaseDuration = 20f;
+                    RoundIndex++;
+                }
+            }
+            else // Carousel -> Shop
             {
                 CurrentPhase = Phase.Shop;
                 PhaseDuration = 20f;
@@ -58,6 +79,17 @@ namespace TestTFT.Scripts.Runtime.Systems.Gameplay
             OnPhaseChanged?.Invoke(CurrentPhase);
             OnTimer?.Invoke(PhaseDuration - PhaseTime, PhaseDuration);
         }
+
+        // Allows UI to finish carousel early (e.g., after pick)
+        public void EndCarouselNow()
+        {
+            if (CurrentPhase != Phase.Carousel) return;
+            PhaseTime = 0f;
+            CurrentPhase = Phase.Shop;
+            PhaseDuration = 20f;
+            RoundIndex++;
+            OnPhaseChanged?.Invoke(CurrentPhase);
+            OnTimer?.Invoke(PhaseDuration - PhaseTime, PhaseDuration);
+        }
     }
 }
-
