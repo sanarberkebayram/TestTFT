@@ -32,7 +32,7 @@ namespace TestTFT.Scripts.Runtime.Combat.Ability
             if (!mana.Spend(spell.manaCost)) return false; // double-guard
 
             // Resolve crit
-            bool isCrit = UnityEngine.Random.value < spell.critChance;
+            bool isCrit = TestTFT.Scripts.Runtime.Systems.Core.DeterministicRng.NextFloat01(TestTFT.Scripts.Runtime.Systems.Core.DeterministicRng.Stream.Targeting) < spell.critChance;
             float outgoingMult = effects != null ? effects.GetOutgoingDamageMultiplier() : 1f;
             float damage = Mathf.Max(0f, spell.baseDamage) * outgoingMult;
             if (isCrit)

@@ -1,4 +1,3 @@
-using System;
 using TestTFT.Scripts.Runtime.Systems.Core;
 
 namespace TestTFT.Scripts.Runtime.Systems.Gameplay
@@ -14,7 +13,7 @@ namespace TestTFT.Scripts.Runtime.Systems.Gameplay
         public Offer[] Current { get; private set; } = new Offer[5];
         public bool Locked { get; private set; }
 
-        private readonly Random _rng = new Random(12345);
+        // RNG handled via DeterministicRng with the Shop stream
 
         public event Action OnChanged;
 
@@ -43,14 +42,15 @@ namespace TestTFT.Scripts.Runtime.Systems.Gameplay
         private string RandomName()
         {
             string[] pool = { "Swordsman", "Archer", "Guardian", "Mage", "Assassin", "Bruiser", "Healer", "Knight", "Gunner", "Invoker" };
-            return pool[_rng.Next(pool.Length)];
+            int idx = DeterministicRng.NextInt(DeterministicRng.Stream.Shop, 0, pool.Length);
+            return pool[idx];
         }
 
         private int RandomCost()
         {
             int[] costs = { 1, 2, 3, 4, 5 };
-            return costs[_rng.Next(costs.Length)];
+            int idx = DeterministicRng.NextInt(DeterministicRng.Stream.Shop, 0, costs.Length);
+            return costs[idx];
         }
     }
 }
-
