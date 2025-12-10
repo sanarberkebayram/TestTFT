@@ -44,6 +44,7 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
             BuildCarousel();
             BuildTraitsUI();
             BuildTooltip();
+            StartBots();
             _loop.OnPhaseChanged += OnPhaseChanged;
             _loop.OnRoundResolved += OnRoundResolved;
             _loop.ForceShop(20f);
@@ -69,7 +70,7 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
             {
                 // PR29: economy payout happens on OnRoundResolved; just reroll shop on entering Shop phase
                 _firstShop = false;
-                _shop.Reroll();
+                _shop.RerollForLevel(_economy.Level);
             }
             else if (phase == GameLoopSystem.Phase.Carousel)
             {
@@ -244,24 +245,6 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
                 var img = slot.AddComponent<Image>();
                 img.color = new Color(0.1f, 0.1f, 0.1f, 0.4f);
                 slot.AddComponent<TestTFT.Scripts.Runtime.UI.Common.DragDrop.DropSlot>();
-
-                var unit = new GameObject("Unit");
-                unit.transform.SetParent(slot.transform, false);
-                var uimg = unit.AddComponent<Image>();
-                uimg.color = new Color(0.5f, 0.7f, 1f, 0.9f);
-                unit.AddComponent<TestTFT.Scripts.Runtime.UI.Common.DragDrop.Draggable>();
-                var tip = unit.AddComponent<TestTFT.Scripts.Runtime.UI.Common.Tooltip.TooltipTarget>();
-                tip.Message = "Drag me! Delete to sell";
-                unit.AddComponent<TestTFT.Scripts.Runtime.UI.Common.Selection.SelectOnClick>();
-                var sell = unit.AddComponent<TestTFT.Scripts.Runtime.UI.Common.Selection.SellOnDelete>();
-                sell.Init(_economy, _shop);
-
-                // Sample trait assignment for demo purposes
-                var ut = unit.AddComponent<TestTFT.Scripts.Runtime.Systems.Traits.UnitTraits>();
-                if (i % 3 == 0) ut.baseTraits.Add("warrior");
-                if (i % 3 == 1) ut.baseTraits.Add("ranger");
-                if (i % 3 == 2) ut.baseTraits.Add("mystic");
-                if (i == 0) ut.emblems.Add("warrior"); // example emblem on first
             }
 
             // Attach controllers
@@ -404,6 +387,19 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
             }
             ctrl.Init(_economy, _carousel, _loop);
             panel.SetActive(false);
+        }
+
+        private void StartBots()
+        {
+            // Wire a simple heuristic bot to act during Shop/Carousel phases.
+            var botHost = new GameObject("BotController");
+            botHost.transform.SetParent(_canvas.transform, false);
+
+            var shopUI = FindObjectOfType<TestTFT.Scripts.Runtime.UI.Shop.ShopController>();
+            var benchCtrl = _benchRoot.GetComponent<TestTFT.Scripts.Runtime.UI.Bench.BenchController>();
+
+            var bot = botHost.AddComponent<TestTFT.Scripts.Runtime.AI.Bot.BotController>();
+            bot.Init(_economy, _shop, _loop, benchCtrl, _carousel, shopUI);
         }
     }
 }
