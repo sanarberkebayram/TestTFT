@@ -37,8 +37,9 @@ namespace TestTFT.Scripts.Runtime.Combat
         {
             if (dodgeChance <= 0f) return false;
             if (dodgeChance >= 1f) return true;
-            return Random.value < dodgeChance;
+            // Use deterministic RNG stream for combat-targeting related rolls
+            return TestTFT.Scripts.Runtime.Systems.Core.DeterministicRng
+                .NextFloat01(TestTFT.Scripts.Runtime.Systems.Core.DeterministicRng.Stream.Targeting) < dodgeChance;
         }
     }
 }
-
