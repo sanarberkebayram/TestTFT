@@ -28,7 +28,7 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
             _canvas = EnsureCanvas();
             _economy = new EconomySystem();
             _shop = new ShopSystem();
-            _shop.Reroll();
+            _shop.RerollForLevel(_economy.Level);
             _loop = new GameLoopSystem();
             _health = new PlayerHealthSystem();
         }
@@ -36,8 +36,8 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
         private void Start()
         {
             BuildHUD();
-            BuildShop();
             BuildBench();
+            BuildShop();
             BuildTraitsUI();
             BuildTooltip();
             _loop.OnPhaseChanged += OnPhaseChanged;
@@ -63,6 +63,7 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
         {
             if (phase == GameLoopSystem.Phase.Shop)
             {
+                // PR29: economy payout happens on OnRoundResolved; just reroll shop on entering Shop phase
                 _firstShop = false;
                 _shop.Reroll();
             }
@@ -140,6 +141,7 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
             rtFill.sizeDelta = new Vector2(160, 0);
 
             var timer = CreateText("20s", hud.transform);
+            var buyXp = CreateButton("Buy XP (4g)", hud.transform);
 
             var reroll = CreateButton("Reroll (2g)", hud.transform);
             var lck = CreateButton("Lock", hud.transform);
@@ -155,6 +157,7 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
             ctrl.rerollButton = reroll;
             ctrl.lockButton = lck;
             ctrl.interestText = interest;
+            ctrl.buyXpButton = buyXp;
             ctrl.Init(_economy, _shop, _loop, _health);
         }
 
@@ -198,7 +201,9 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
                     buyButton = btn
                 };
             }
-            ctrl.Init(_economy, _shop);
+            // Bind bench controller for spawning purchased units
+            var benchCtrl = _benchRoot.GetComponent<TestTFT.Scripts.Runtime.UI.Bench.BenchController>();
+            ctrl.Init(_economy, _shop, benchCtrl);
         }
 
         private void BuildBench()
@@ -235,7 +240,7 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
                 tip.Message = "Drag me! Delete to sell";
                 unit.AddComponent<TestTFT.Scripts.Runtime.UI.Common.Selection.SelectOnClick>();
                 var sell = unit.AddComponent<TestTFT.Scripts.Runtime.UI.Common.Selection.SellOnDelete>();
-                sell.Init(_economy);
+                sell.Init(_economy, _shop);
 
                 // Sample trait assignment for demo purposes
                 var ut = unit.AddComponent<TestTFT.Scripts.Runtime.Systems.Traits.UnitTraits>();
@@ -244,6 +249,11 @@ namespace TestTFT.Scripts.Runtime.Systems.Bootstrap
                 if (i % 3 == 2) ut.baseTraits.Add("mystic");
                 if (i == 0) ut.emblems.Add("warrior"); // example emblem on first
             }
+
+            // Attach controllers
+            var benchCtrl = bench.AddComponent<TestTFT.Scripts.Runtime.UI.Bench.BenchController>();
+            benchCtrl.Init(_economy, _shop);
+            bench.AddComponent<TestTFT.Scripts.Runtime.Systems.Gameplay.CombineOnRosterChange>();
         }
 
         private void BuildTraitsUI()
